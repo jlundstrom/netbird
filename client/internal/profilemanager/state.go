@@ -10,7 +10,8 @@ import (
 )
 
 type ProfileState struct {
-	Email string `json:"email"`
+	Email     string `json:"email"`
+	LoginHint string `json:"loginHint"`
 }
 
 func (pm *ProfileManager) GetProfileState(profileName string) (*ProfileState, error) {

@@ -637,7 +637,8 @@ func (s *Server) WaitSSOLogin(callerCtx context.Context, msg *proto.WaitSSOLogin
 	}
 
 	return &proto.WaitSSOLoginResponse{
-		Email: tokenInfo.Email,
+		Email:     tokenInfo.Email,
+		LoginHint: tokenInfo.LoginHint,
 	}, nil
 }
 

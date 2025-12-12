@@ -240,6 +240,13 @@ func (p *PKCEAuthorizationFlow) parseOAuthToken(token *oauth2.Token) (TokenInfo,
 		return TokenInfo{}, fmt.Errorf("authentication failed: invalid access token - %w", err)
 	}
 
+	loginHint, err := parseLoginHintFromIDToken(tokenInfo.IDToken)
+	if err != nil {
+		log.Warnf("failed to parse loginHint from ID token: %v", err)
+	} else {
+		tokenInfo.LoginHint = loginHint
+	}
+
 	email, err := parseEmailFromIDToken(tokenInfo.IDToken)
 	if err != nil {
 		log.Warnf("failed to parse email from ID token: %v", err)
@@ -266,18 +273,48 @@ func parseEmailFromIDToken(token string) (string, error) {
 	}
 
 	var email string
-	if emailValue, ok := claims["email"].(string); ok {
+	if preferredNameValue, ok := claims["preferred_username"].(string); ok {
+		email = preferredNameValue
+	} else if emailValue, ok := claims["email"].(string); ok {
 		email = emailValue
+	} else if nameValue, ok := claims["name"].(string); ok {
+		email = nameValue
 	} else {
-		val, ok := claims["name"].(string)
-		if ok {
-			email = val
-		} else {
-			return "", fmt.Errorf("email or name field not found in token payload")
-		}
+		return "", fmt.Errorf("email or name field not found in token payload")
 	}
 
 	return email, nil
+}
+
+func parseLoginHintFromIDToken(token string) (string, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) < 2 {
+		return "", fmt.Errorf("invalid token format")
+	}
+
+	data, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", fmt.Errorf("failed to decode payload: %w", err)
+	}
+	var claims map[string]interface{}
+	if err := json.Unmarshal(data, &claims); err != nil {
+		return "", fmt.Errorf("json unmarshal error: %w", err)
+	}
+
+	var loginHint string
+	if loginHintValue, ok := claims["login_hint"].(string); ok {
+		loginHint = loginHintValue
+	} else if preferredNameValue, ok := claims["preferred_username"].(string); ok {
+		loginHint = preferredNameValue
+	} else if emailValue, ok := claims["email"].(string); ok {
+		loginHint = emailValue
+	} else if nameValue, ok := claims["name"].(string); ok {
+		loginHint = nameValue
+	} else {
+		return "", fmt.Errorf("email or name field not found in token payload")
+	}
+
+	return loginHint, nil
 }
 
 func createCodeChallenge(codeVerifier string) string {

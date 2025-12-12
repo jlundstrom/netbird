@@ -289,6 +289,8 @@ func doDaemonUp(ctx context.Context, cmd *cobra.Command, client proto.DaemonServ
 	profileState, err := pm.GetProfileState(activeProf.Name)
 	if err != nil {
 		log.Debugf("failed to get profile state for login hint: %v", err)
+	} else if profileState.LoginHint != "" {
+		loginRequest.Hint = &profileState.LoginHint
 	} else if profileState.Email != "" {
 		loginRequest.Hint = &profileState.Email
 	}

@@ -210,6 +210,7 @@ message WaitSSOLoginRequest {
 
 message WaitSSOLoginResponse {
   string email = 1;
+  string loginHint = 2;
 }
 
 message UpRequest {

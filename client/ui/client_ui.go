@@ -773,6 +773,8 @@ func (s *serviceClient) login(ctx context.Context, openURL bool) (*proto.LoginRe
 	profileState, err := s.profileManager.GetProfileState(activeProf.Name)
 	if err != nil {
 		log.Debugf("failed to get profile state for login hint: %v", err)
+	} else if profileState.LoginHint != "" {
+		loginReq.Hint = &profileState.LoginHint
 	} else if profileState.Email != "" {
 		loginReq.Hint = &profileState.Email
 	}
@@ -801,9 +803,10 @@ func (s *serviceClient) handleSSOLogin(ctx context.Context, loginResp *proto.Log
 		return fmt.Errorf("wait for SSO login: %w", err)
 	}
 
-	if resp.Email != "" {
+	if resp.Email != "" || resp.LoginHint != "" {
 		if err := s.profileManager.SetActiveProfileState(&profilemanager.ProfileState{
-			Email: resp.Email,
+			Email:     resp.Email,
+			LoginHint: resp.LoginHint,
 		}); err != nil {
 			log.Debugf("failed to set profile state: %v", err)
 		} else {

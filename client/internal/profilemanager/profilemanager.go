@@ -148,5 +148,9 @@ func GetLoginHint() string {
 		return ""
 	}
 
+	if profileState.LoginHint != "" {
+		return profileState.LoginHint
+	}
+
 	return profileState.Email
 }

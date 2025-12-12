@@ -50,6 +50,7 @@ type TokenInfo struct {
 	ExpiresIn    int    `json:"expires_in"`
 	UseIDToken   bool   `json:"-"`
 	Email        string `json:"-"`
+	LoginHint    string `json:"-"`
 }
 
 // GetTokenToUse returns either the access or id token based on UseIDToken field

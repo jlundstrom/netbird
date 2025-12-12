@@ -107,6 +107,8 @@ func doDaemonLogin(ctx context.Context, cmd *cobra.Command, providedSetupKey str
 	profileState, err := pm.GetProfileState(activeProf.Name)
 	if err != nil {
 		log.Debugf("failed to get profile state for login hint: %v", err)
+	} else if profileState.LoginHint != "" {
+		loginRequest.Hint = &profileState.LoginHint
 	} else if profileState.Email != "" {
 		loginRequest.Hint = &profileState.Email
 	}
@@ -262,9 +264,10 @@ func handleSSOLogin(ctx context.Context, cmd *cobra.Command, loginResp *proto.Lo
 		return fmt.Errorf("waiting sso login failed with: %v", err)
 	}
 
-	if resp.Email != "" {
+	if resp.Email != "" || resp.LoginHint != "" {
 		err = pm.SetActiveProfileState(&profilemanager.ProfileState{
-			Email: resp.Email,
+			Email:     resp.Email,
+			LoginHint: resp.LoginHint,
 		})
 		if err != nil {
 			log.Warnf("failed to set active profile email: %v", err)
